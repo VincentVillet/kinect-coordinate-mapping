@@ -13,6 +13,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Globalization;
 
 namespace KinectCoordinateMapping
 {
@@ -82,50 +83,61 @@ namespace KinectCoordinateMapping
 
                     frame.CopySkeletonDataTo(_bodies);
 
-                    foreach (var body in _bodies)
+                    var body = (from s in _bodies
+                                where s.TrackingState == SkeletonTrackingState.Tracked
+                                select s).FirstOrDefault();
+                    if (body != null)
                     {
-                        if (body.TrackingState == SkeletonTrackingState.Tracked)
+                        // COORDINATE MAPPING
+                        foreach (Joint joint in body.Joints)
                         {
-                            // COORDINATE MAPPING
-                            foreach (Joint joint in body.Joints)
+                            // 3D coordinates in meters
+                            SkeletonPoint skeletonPoint = joint.Position;
+
+                            // 2D coordinates in pixels
+                            Point point = new Point();
+
+                            if (_mode == CameraMode.Color)
                             {
-                                // 3D coordinates in meters
-                                SkeletonPoint skeletonPoint = joint.Position;
+                                // Skeleton-to-Color mapping
+                                ColorImagePoint colorPoint = _sensor.CoordinateMapper.MapSkeletonPointToColorPoint(skeletonPoint, ColorImageFormat.RgbResolution640x480Fps30);
 
-                                // 2D coordinates in pixels
-                                Point point = new Point();
-
-                                if (_mode == CameraMode.Color)
-                                {
-                                    // Skeleton-to-Color mapping
-                                    ColorImagePoint colorPoint = _sensor.CoordinateMapper.MapSkeletonPointToColorPoint(skeletonPoint, ColorImageFormat.RgbResolution640x480Fps30);
-
-                                    point.X = colorPoint.X;
-                                    point.Y = colorPoint.Y;
-                                }
-                                else if (_mode == CameraMode.Depth) // Remember to change the Image and Canvas size to 320x240.
-                                {
-                                    // Skeleton-to-Depth mapping
-                                    DepthImagePoint depthPoint = _sensor.CoordinateMapper.MapSkeletonPointToDepthPoint(skeletonPoint, DepthImageFormat.Resolution320x240Fps30);
-
-                                    point.X = depthPoint.X;
-                                    point.Y = depthPoint.Y;
-                                }
-
-                                // DRAWING...
-                                Ellipse ellipse = new Ellipse
-                                {
-                                    Fill = Brushes.LightBlue,
-                                    Width = 20,
-                                    Height = 20
-                                };
-
-                                Canvas.SetLeft(ellipse, point.X - ellipse.Width / 2);
-                                Canvas.SetTop(ellipse, point.Y - ellipse.Height / 2);
-
-                                canvas.Children.Add(ellipse);
+                                point.X = colorPoint.X;
+                                point.Y = colorPoint.Y;
                             }
+                            else if (_mode == CameraMode.Depth) // Remember to change the Image and Canvas size to 320x240.
+                            {
+                                // Skeleton-to-Depth mapping
+                                DepthImagePoint depthPoint = _sensor.CoordinateMapper.MapSkeletonPointToDepthPoint(skeletonPoint, DepthImageFormat.Resolution320x240Fps30);
+
+                                point.X = depthPoint.X;
+                                point.Y = depthPoint.Y;
+                            }
+
+                            // DRAWING...
+                            Ellipse ellipse = new Ellipse
+                            {
+                                Fill = Brushes.LightBlue,
+                                Width = 20,
+                                Height = 20
+                            };
+
+                            Canvas.SetLeft(ellipse, point.X - ellipse.Width / 2);
+                            Canvas.SetTop(ellipse, point.Y - ellipse.Height / 2);
+
+                            canvas.Children.Add(ellipse);
                         }
+
+                        // Left and Right hand coordinate printing
+                        var rightHand = body.Joints[JointType.WristRight];
+                        XValueRight.Text = (100 * rightHand.Position.X).ToString("0");
+                        YValueRight.Text = (100 * rightHand.Position.Y).ToString("0");
+                        ZValueRight.Text = (100 * rightHand.Position.Z).ToString("0");
+
+                        var leftHand = body.Joints[JointType.WristLeft];
+                        XValueLeft.Text = (100 * leftHand.Position.X).ToString("0");
+                        YValueLeft.Text = (100 * leftHand.Position.Y).ToString("0");
+                        ZValueLeft.Text = (100 * leftHand.Position.Z).ToString("0");
                     }
                 }
             }
