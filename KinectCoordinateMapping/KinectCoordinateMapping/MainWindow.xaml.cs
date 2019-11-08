@@ -89,43 +89,38 @@ namespace KinectCoordinateMapping
                     if (body != null)
                     {
                         // COORDINATE MAPPING
-                        foreach (Joint joint in body.Joints)
+                        plot_joint(body.Joints[JointType.HipCenter], Brushes.LightBlue);
+                        plot_joint(body.Joints[JointType.Spine], Brushes.LightBlue);
+                        plot_joint(body.Joints[JointType.ShoulderCenter], Brushes.LightBlue);
+                        plot_joint(body.Joints[JointType.Head], Brushes.LightBlue);
+                        plot_joint(body.Joints[JointType.ShoulderLeft], Brushes.LightBlue);
+                        plot_joint(body.Joints[JointType.ElbowLeft], Brushes.LightBlue);
+                        plot_joint(body.Joints[JointType.WristLeft], Brushes.LightBlue);
+                        plot_joint(body.Joints[JointType.HandLeft], Brushes.LightBlue);
+                        plot_joint(body.Joints[JointType.ShoulderRight], Brushes.LightBlue);
+                        plot_joint(body.Joints[JointType.ElbowRight], Brushes.LightBlue);
+                        plot_joint(body.Joints[JointType.WristRight], Brushes.LightBlue);
+                        plot_joint(body.Joints[JointType.HandRight], Brushes.LightBlue);
+                        plot_joint(body.Joints[JointType.HipLeft], Brushes.LightBlue);
+                        plot_joint(body.Joints[JointType.KneeLeft], Brushes.LightBlue);
+                        plot_joint(body.Joints[JointType.AnkleLeft], Brushes.LightBlue);
+                        plot_joint(body.Joints[JointType.FootLeft], Brushes.LightBlue);
+                        plot_joint(body.Joints[JointType.HipRight], Brushes.LightBlue);
+                        plot_joint(body.Joints[JointType.KneeRight], Brushes.LightBlue);
+                        plot_joint(body.Joints[JointType.AnkleRight], Brushes.LightBlue);
+                        plot_joint(body.Joints[JointType.FootRight], Brushes.LightBlue);
+
+                        if (Math.Abs(body.Joints[JointType.HipLeft].Position.Z - body.Joints[JointType.HipRight].Position.Z) <= 0.02)
                         {
-                            // 3D coordinates in meters
-                            SkeletonPoint skeletonPoint = joint.Position;
+                            plot_joint(body.Joints[JointType.HipLeft], Brushes.DarkBlue);
+                            plot_joint(body.Joints[JointType.HipRight], Brushes.DarkBlue);
+                        }
 
-                            // 2D coordinates in pixels
-                            Point point = new Point();
 
-                            if (_mode == CameraMode.Color)
-                            {
-                                // Skeleton-to-Color mapping
-                                ColorImagePoint colorPoint = _sensor.CoordinateMapper.MapSkeletonPointToColorPoint(skeletonPoint, ColorImageFormat.RgbResolution640x480Fps30);
-
-                                point.X = colorPoint.X;
-                                point.Y = colorPoint.Y;
-                            }
-                            else if (_mode == CameraMode.Depth) // Remember to change the Image and Canvas size to 320x240.
-                            {
-                                // Skeleton-to-Depth mapping
-                                DepthImagePoint depthPoint = _sensor.CoordinateMapper.MapSkeletonPointToDepthPoint(skeletonPoint, DepthImageFormat.Resolution320x240Fps30);
-
-                                point.X = depthPoint.X;
-                                point.Y = depthPoint.Y;
-                            }
-
-                            // DRAWING...
-                            Ellipse ellipse = new Ellipse
-                            {
-                                Fill = Brushes.LightBlue,
-                                Width = 20,
-                                Height = 20
-                            };
-
-                            Canvas.SetLeft(ellipse, point.X - ellipse.Width / 2);
-                            Canvas.SetTop(ellipse, point.Y - ellipse.Height / 2);
-
-                            canvas.Children.Add(ellipse);
+                        if (Math.Abs(body.Joints[JointType.ShoulderLeft].Position.Z - body.Joints[JointType.ShoulderRight].Position.Z) <= 0.02)
+                        {
+                            plot_joint(body.Joints[JointType.ShoulderLeft], Brushes.DarkBlue);
+                            plot_joint(body.Joints[JointType.ShoulderRight], Brushes.DarkBlue);
                         }
 
                         // Left and Right hand coordinate printing
@@ -142,6 +137,46 @@ namespace KinectCoordinateMapping
                 }
             }
         }
+
+        public void plot_joint(Joint joint, Brush color)
+        {
+            // 3D coordinates in meters
+            SkeletonPoint skeletonPoint = joint.Position;
+
+            // 2D coordinates in pixels
+            Point point = new Point();
+
+            if (_mode == CameraMode.Color)
+            {
+                // Skeleton-to-Color mapping
+                ColorImagePoint colorPoint = _sensor.CoordinateMapper.MapSkeletonPointToColorPoint(skeletonPoint, ColorImageFormat.RgbResolution640x480Fps30);
+
+                point.X = colorPoint.X;
+                point.Y = colorPoint.Y;
+            }
+            else if (_mode == CameraMode.Depth) // Remember to change the Image and Canvas size to 320x240.
+            {
+                // Skeleton-to-Depth mapping
+                DepthImagePoint depthPoint = _sensor.CoordinateMapper.MapSkeletonPointToDepthPoint(skeletonPoint, DepthImageFormat.Resolution320x240Fps30);
+
+                point.X = depthPoint.X;
+                point.Y = depthPoint.Y;
+            }
+
+            // DRAWING...
+            Ellipse ellipse = new Ellipse
+            {
+                Fill = color,
+                Width = 20,
+                Height = 20
+            };
+
+            Canvas.SetLeft(ellipse, point.X - ellipse.Width / 2);
+            Canvas.SetTop(ellipse, point.Y - ellipse.Height / 2);
+
+            canvas.Children.Add(ellipse);
+        }
+
 
         private void Window_Unloaded(object sender, RoutedEventArgs e)
         {
