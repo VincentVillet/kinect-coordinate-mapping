@@ -14,6 +14,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Globalization;
+using System.Runtime.Caching;
 
 namespace KinectCoordinateMapping
 {
@@ -26,6 +27,8 @@ namespace KinectCoordinateMapping
 
         KinectSensor _sensor;
         Skeleton[] _bodies = new Skeleton[6];
+
+        Queue<float> LastHipCenterZs = new Queue<float>(new[] { 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f });
 
         public MainWindow()
         {
@@ -110,18 +113,36 @@ namespace KinectCoordinateMapping
                         plot_joint(body.Joints[JointType.AnkleRight], Brushes.LightBlue);
                         plot_joint(body.Joints[JointType.FootRight], Brushes.LightBlue);
 
+
+                        // Shoulders and hips turn green if the person is facing the camera
                         if (Math.Abs(body.Joints[JointType.HipLeft].Position.Z - body.Joints[JointType.HipRight].Position.Z) <= 0.02)
                         {
-                            plot_joint(body.Joints[JointType.HipLeft], Brushes.DarkBlue);
-                            plot_joint(body.Joints[JointType.HipRight], Brushes.DarkBlue);
+                            plot_joint(body.Joints[JointType.HipLeft], Brushes.Green);
+                            plot_joint(body.Joints[JointType.HipRight], Brushes.Green);
                         }
 
 
                         if (Math.Abs(body.Joints[JointType.ShoulderLeft].Position.Z - body.Joints[JointType.ShoulderRight].Position.Z) <= 0.02)
                         {
-                            plot_joint(body.Joints[JointType.ShoulderLeft], Brushes.DarkBlue);
-                            plot_joint(body.Joints[JointType.ShoulderRight], Brushes.DarkBlue);
+                            plot_joint(body.Joints[JointType.ShoulderLeft], Brushes.Green);
+                            plot_joint(body.Joints[JointType.ShoulderRight], Brushes.Green);
                         }
+
+                        // Update hip position history to compute speed sign
+                        float CurrentHipCenterZ = body.Joints[JointType.HipCenter].Position.Z;
+                        LastHipCenterZs.Enqueue(CurrentHipCenterZ);
+                        float LastHipCenterZ = LastHipCenterZs.Dequeue();
+
+                        if (CurrentHipCenterZ - LastHipCenterZ > 0.01)
+                        {
+                            plot_joint(body.Joints[JointType.HipCenter], Brushes.DarkBlue);
+                        }
+
+                        if (CurrentHipCenterZ - LastHipCenterZ < -0.01)
+                        {
+                            plot_joint(body.Joints[JointType.HipCenter], Brushes.Red);
+                        }
+
 
                         // Left and Right hand coordinate printing
                         var rightHand = body.Joints[JointType.WristRight];
@@ -133,6 +154,7 @@ namespace KinectCoordinateMapping
                         XValueLeft.Text = (100 * leftHand.Position.X).ToString("0");
                         YValueLeft.Text = (100 * leftHand.Position.Y).ToString("0");
                         ZValueLeft.Text = (100 * leftHand.Position.Z).ToString("0");
+                       
                     }
                 }
             }
@@ -176,7 +198,6 @@ namespace KinectCoordinateMapping
 
             canvas.Children.Add(ellipse);
         }
-
 
         private void Window_Unloaded(object sender, RoutedEventArgs e)
         {
