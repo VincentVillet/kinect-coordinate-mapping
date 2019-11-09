@@ -28,7 +28,13 @@ namespace KinectCoordinateMapping
         KinectSensor _sensor;
         Skeleton[] _bodies = new Skeleton[6];
 
+        float speed_sensitivity = 0.01f;
+
         Queue<float> LastHipCenterZs = new Queue<float>(new[] { 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f });
+        Queue<float> LastSpineZs = new Queue<float>(new[] { 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f });
+        Queue<float> LastHeadZs = new Queue<float>(new[] { 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f });
+        Queue<float> LastKneeLeftZs = new Queue<float>(new[] { 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f });
+        Queue<float> LastKneeRightZs = new Queue<float>(new[] { 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f });
 
         public MainWindow()
         {
@@ -89,6 +95,7 @@ namespace KinectCoordinateMapping
                     var body = (from s in _bodies
                                 where s.TrackingState == SkeletonTrackingState.Tracked
                                 select s).FirstOrDefault();
+
                     if (body != null)
                     {
                         // COORDINATE MAPPING
@@ -115,45 +122,29 @@ namespace KinectCoordinateMapping
 
 
                         // Shoulders and hips turn green if the person is facing the camera
-                        if (Math.Abs(body.Joints[JointType.HipLeft].Position.Z - body.Joints[JointType.HipRight].Position.Z) <= 0.02)
-                        {
-                            plot_joint(body.Joints[JointType.HipLeft], Brushes.Green);
-                            plot_joint(body.Joints[JointType.HipRight], Brushes.Green);
-                        }
+                        green_if_same_z(body.Joints[JointType.HipLeft], body.Joints[JointType.HipRight]);
+                        green_if_same_z(body.Joints[JointType.ShoulderLeft], body.Joints[JointType.ShoulderRight]);
 
+                        // Wrists turn green if staying of frontal
+                        green_if_same_z(body.Joints[JointType.WristLeft], body.Joints[JointType.WristRight]);
 
-                        if (Math.Abs(body.Joints[JointType.ShoulderLeft].Position.Z - body.Joints[JointType.ShoulderRight].Position.Z) <= 0.02)
-                        {
-                            plot_joint(body.Joints[JointType.ShoulderLeft], Brushes.Green);
-                            plot_joint(body.Joints[JointType.ShoulderRight], Brushes.Green);
-                        }
+                        // Visual feedback on speed direction of hip center, spine, head and knees
+                        plot_speed(body.Joints[JointType.HipCenter], LastHipCenterZs, speed_sensitivity);
+                        plot_speed(body.Joints[JointType.Spine], LastSpineZs, speed_sensitivity);
+                        plot_speed(body.Joints[JointType.Head], LastHeadZs, speed_sensitivity);
+                        plot_speed(body.Joints[JointType.KneeLeft], LastKneeLeftZs, speed_sensitivity);
+                        plot_speed(body.Joints[JointType.KneeRight], LastKneeRightZs, speed_sensitivity);
 
-                        // Update hip position history to compute speed sign
-                        float CurrentHipCenterZ = body.Joints[JointType.HipCenter].Position.Z;
-                        LastHipCenterZs.Enqueue(CurrentHipCenterZ);
-                        float LastHipCenterZ = LastHipCenterZs.Dequeue();
+                        // Left and Right wrist coordinate printing
+                        var rightWrist = body.Joints[JointType.WristRight];
+                        XValueRight.Text = (100 * rightWrist.Position.X).ToString("0");
+                        YValueRight.Text = (100 * rightWrist.Position.Y).ToString("0");
+                        ZValueRight.Text = (100 * rightWrist.Position.Z).ToString("0");
 
-                        if (CurrentHipCenterZ - LastHipCenterZ > 0.01)
-                        {
-                            plot_joint(body.Joints[JointType.HipCenter], Brushes.DarkBlue);
-                        }
-
-                        if (CurrentHipCenterZ - LastHipCenterZ < -0.01)
-                        {
-                            plot_joint(body.Joints[JointType.HipCenter], Brushes.Red);
-                        }
-
-
-                        // Left and Right hand coordinate printing
-                        var rightHand = body.Joints[JointType.WristRight];
-                        XValueRight.Text = (100 * rightHand.Position.X).ToString("0");
-                        YValueRight.Text = (100 * rightHand.Position.Y).ToString("0");
-                        ZValueRight.Text = (100 * rightHand.Position.Z).ToString("0");
-
-                        var leftHand = body.Joints[JointType.WristLeft];
-                        XValueLeft.Text = (100 * leftHand.Position.X).ToString("0");
-                        YValueLeft.Text = (100 * leftHand.Position.Y).ToString("0");
-                        ZValueLeft.Text = (100 * leftHand.Position.Z).ToString("0");
+                        var leftWrist = body.Joints[JointType.WristLeft];
+                        XValueLeft.Text = (100 * leftWrist.Position.X).ToString("0");
+                        YValueLeft.Text = (100 * leftWrist.Position.Y).ToString("0");
+                        ZValueLeft.Text = (100 * leftWrist.Position.Z).ToString("0");
                        
                     }
                 }
@@ -197,6 +188,32 @@ namespace KinectCoordinateMapping
             Canvas.SetTop(ellipse, point.Y - ellipse.Height / 2);
 
             canvas.Children.Add(ellipse);
+        }
+
+        public void plot_speed(Joint joint, Queue<float> LastZPositions, float sensitivity)
+        {
+            float CurrentZPosition = joint.Position.Z;
+            LastZPositions.Enqueue(CurrentZPosition);
+            float LastZPosition = LastZPositions.Dequeue();
+
+            if (CurrentZPosition - LastZPosition > sensitivity)
+            {
+                plot_joint(joint, Brushes.DarkBlue);
+            }
+
+            if (CurrentZPosition - LastZPosition < -sensitivity)
+            {
+                plot_joint(joint, Brushes.Red);
+            }
+        }
+
+        public void green_if_same_z(Joint leftJoint, Joint rightJoint)
+        {
+            if (Math.Abs(leftJoint.Position.Z - rightJoint.Position.Z) <= 0.02)
+            {
+                plot_joint(leftJoint, Brushes.Green);
+                plot_joint(rightJoint, Brushes.Green);
+            }
         }
 
         private void Window_Unloaded(object sender, RoutedEventArgs e)
