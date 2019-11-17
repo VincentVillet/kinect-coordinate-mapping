@@ -28,13 +28,29 @@ namespace KinectCoordinateMapping
         KinectSensor _sensor;
         Skeleton[] _bodies = new Skeleton[6];
 
-        float speed_sensitivity = 0.01f;
+        float speed_sensitivity = 0.001f;
 
         Queue<float> LastHipCenterZs = new Queue<float>(new[] { 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f });
         Queue<float> LastSpineZs = new Queue<float>(new[] { 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f });
+        Queue<float> LastShoulderCenterZs = new Queue<float>(new[] { 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f });
         Queue<float> LastHeadZs = new Queue<float>(new[] { 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f });
+        Queue<float> LastShoulderLeftZs = new Queue<float>(new[] { 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f });
+        Queue<float> LastElbowLeftZs = new Queue<float>(new[] { 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f });
+        Queue<float> LastWristLeftZs = new Queue<float>(new[] { 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f });
+        Queue<float> LastHandLeftZs = new Queue<float>(new[] { 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f });
+        Queue<float> LastShoulderRightZs = new Queue<float>(new[] { 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f });
+        Queue<float> LastElbowRightZs = new Queue<float>(new[] { 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f });
+        Queue<float> LastWristRightZs = new Queue<float>(new[] { 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f });
+        Queue<float> LastHandRightZs = new Queue<float>(new[] { 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f });
+        Queue<float> LastHipLeftZs = new Queue<float>(new[] { 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f });
         Queue<float> LastKneeLeftZs = new Queue<float>(new[] { 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f });
+        Queue<float> LastAnkleLeftZs = new Queue<float>(new[] { 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f });
+        Queue<float> LastFootLeftZs = new Queue<float>(new[] { 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f });
+        Queue<float> LastHipRightZs = new Queue<float>(new[] { 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f });
         Queue<float> LastKneeRightZs = new Queue<float>(new[] { 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f });
+        Queue<float> LastAnkleRightZs = new Queue<float>(new[] { 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f });
+        Queue<float> LastFootRightZs = new Queue<float>(new[] { 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f });
+
 
         public MainWindow()
         {
@@ -122,11 +138,11 @@ namespace KinectCoordinateMapping
 
 
                         // Shoulders and hips turn green if the person is facing the camera
-                        green_if_same_z(body.Joints[JointType.HipLeft], body.Joints[JointType.HipRight]);
-                        green_if_same_z(body.Joints[JointType.ShoulderLeft], body.Joints[JointType.ShoulderRight]);
+                        //green_if_same_z(body.Joints[JointType.HipLeft], body.Joints[JointType.HipRight]);
+                        //green_if_same_z(body.Joints[JointType.ShoulderLeft], body.Joints[JointType.ShoulderRight]);
 
-                        // Wrists turn green if staying of frontal
-                        green_if_same_z(body.Joints[JointType.WristLeft], body.Joints[JointType.WristRight]);
+                        // Wrists turn green if staying on frontal
+                        //green_if_same_z(body.Joints[JointType.WristLeft], body.Joints[JointType.WristRight]);
 
                         // Visual feedback on speed direction of hip center, spine, head and knees
                         plot_speed(body.Joints[JointType.HipCenter], LastHipCenterZs, speed_sensitivity);
@@ -134,6 +150,19 @@ namespace KinectCoordinateMapping
                         plot_speed(body.Joints[JointType.Head], LastHeadZs, speed_sensitivity);
                         plot_speed(body.Joints[JointType.KneeLeft], LastKneeLeftZs, speed_sensitivity);
                         plot_speed(body.Joints[JointType.KneeRight], LastKneeRightZs, speed_sensitivity);
+                        plot_speed(body.Joints[JointType.ShoulderCenter], LastShoulderCenterZs, speed_sensitivity);
+                        plot_speed(body.Joints[JointType.ShoulderLeft], LastShoulderLeftZs, speed_sensitivity);
+                        plot_speed(body.Joints[JointType.ShoulderRight], LastShoulderRightZs, speed_sensitivity);
+                        plot_speed(body.Joints[JointType.HipLeft], LastHipLeftZs, speed_sensitivity);
+                        plot_speed(body.Joints[JointType.HipRight], LastHipRightZs, speed_sensitivity);
+                        plot_speed(body.Joints[JointType.WristLeft], LastWristLeftZs, speed_sensitivity);
+                        plot_speed(body.Joints[JointType.WristRight], LastWristRightZs, speed_sensitivity);
+                        plot_speed(body.Joints[JointType.AnkleLeft], LastAnkleLeftZs, speed_sensitivity);
+                        plot_speed(body.Joints[JointType.AnkleRight], LastAnkleRightZs, speed_sensitivity);
+                        plot_speed(body.Joints[JointType.ElbowLeft], LastElbowLeftZs, speed_sensitivity);
+                        plot_speed(body.Joints[JointType.ElbowRight], LastElbowRightZs, speed_sensitivity);
+                        plot_speed(body.Joints[JointType.HandLeft], LastHandLeftZs, speed_sensitivity);
+                        plot_speed(body.Joints[JointType.HandRight], LastHandRightZs, speed_sensitivity);
 
                         // Left and Right wrist coordinate printing
                         var rightWrist = body.Joints[JointType.WristRight];
@@ -198,7 +227,7 @@ namespace KinectCoordinateMapping
 
             if (CurrentZPosition - LastZPosition > sensitivity)
             {
-                plot_joint(joint, Brushes.DarkBlue);
+                plot_joint(joint, Brushes.Green);
             }
 
             if (CurrentZPosition - LastZPosition < -sensitivity)
